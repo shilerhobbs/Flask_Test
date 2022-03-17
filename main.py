@@ -1,9 +1,12 @@
 from flask import Flask, jsonify, request
 from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
 
-app.config['UPLOAD_FOLDER'] = '/home/logs'
+upload_folder = '/home/logs/'
+
+app.config['UPLOAD_FOLDER'] = upload_folder
 app.config['MAX_CONTENT_PATH'] = 500000
 
 incomes = [
@@ -29,7 +32,7 @@ def upload_file():
     if request.method == 'POST':
         print(request.files)
         f = request.files['']
-        f.save(secure_filename(f.filename))
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(f.filename)))
         return 'file uploaded successfully'
 
 if __name__ == "__main__":
