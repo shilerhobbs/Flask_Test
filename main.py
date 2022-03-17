@@ -27,7 +27,7 @@ def add_income():
 @app.route('/upload', methods = ['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        print(request.files)
+        print(request.files[0])
         f = request.files['file']
         f.save(secure_filename(f.filename))
         return 'file uploaded successfully'
