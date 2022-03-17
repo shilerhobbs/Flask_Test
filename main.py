@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-upload_folder = '/home/logs/'
+upload_folder = './logs/'
 
 app.config['UPLOAD_FOLDER'] = upload_folder
 app.config['MAX_CONTENT_PATH'] = 500000
@@ -32,7 +32,7 @@ def upload_file():
     if request.method == 'POST':
         print(request.files)
         f = request.files['']
-        f.save(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(f.filename)))
+        f.save(secure_filename(f.filename))
         return 'file uploaded successfully'
 
 if __name__ == "__main__":
