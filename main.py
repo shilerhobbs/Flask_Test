@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
@@ -27,7 +28,7 @@ def add_income():
 def upload_file():
     if request.method == 'POST':
         f = request.files['file']
-        f.save(f.filename)
+        f.save(secure_filename(f.filename))
         return 'file uploaded successfully'
 
 if __name__ == "__main__":
