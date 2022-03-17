@@ -28,7 +28,7 @@ def add_income():
 def upload_file():
     if request.method == 'POST':
         print(request.files)
-        f = request.files['file']
+        f = request.files['']
         f.save(secure_filename(f.filename))
         return 'file uploaded successfully'
 
