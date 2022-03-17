@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-app.config['UPLOAD_FOLDER'] = '/home/logs/'
+app.config['UPLOAD_FOLDER'] = '/home/logs'
 app.config['MAX_CONTENT_PATH'] = 500000
 
 incomes = [
