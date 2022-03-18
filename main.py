@@ -14,7 +14,10 @@ if not os.path.exists(upload_folder):
 app.config['UPLOAD_FOLDER'] = upload_folder
 app.config['MAX_CONTENT_PATH'] = 500000
 
+# TODO add authentication!!! LDAP?
 
+
+# TODO add file extension checking - only log files should be uploaded
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
