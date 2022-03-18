@@ -18,9 +18,8 @@ app.config['MAX_CONTENT_PATH'] = 500000
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
-        print(request.files)
-        f = request.files['']
-        f.save(os.path.join(upload_folder, secure_filename(f.filename)))
+        for file in request.files.getlist(''):
+            file.save(os.path.join(upload_folder, secure_filename(file.filename)))
         return 'file uploaded successfully'
     if request.method == 'GET':
         return 'nothing here yet'
