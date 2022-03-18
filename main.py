@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory, current_app, render_template
 from werkzeug.utils import secure_filename
 import os
+import zipfile
 
 app = Flask(__name__)
 
@@ -39,6 +40,16 @@ def download(filename):
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
     else:
         return 'file not found'
+
+
+@app.route('/pull_logs', methods=['GET'])
+def pull_logs():
+    with zipfile.ZipFile('logs.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(upload_folder):
+            for file in files:
+                zipf.write(os.path.join(upload_folder, file), file)
+    return send_from_directory(current_app.root_path, 'logs.zip', as_attachment=True)
+
 
 
 if __name__ == "__main__":
