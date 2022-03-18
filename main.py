@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory, current_app
+from flask import Flask, jsonify, request, send_from_directory, current_app, render_template
 from werkzeug.utils import secure_filename
 import os
 
@@ -26,11 +26,14 @@ def upload():
         return 'nothing here yet'
 
 
-@app.route('/upload/logs/<path:filename>', methods=['GET'])
+@app.route('/logs', methods=['GET'])
+def list_logs():
+    files = os.listdir(upload_folder)
+    return render_template('directory_template.html', files=files)
+
+@app.route('/logs/<path:filename>', methods=['GET'])
 def download(filename):
     if filename in os.listdir('./logs'):
-        with app.app_context():
-            full_path = os.path.join(current_app.root_path, app.config['UPLOAD_FOLDER'])
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
     else:
         return 'file not found'
