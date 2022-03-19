@@ -1,56 +1,67 @@
+import os
 from flask import Flask, jsonify, request, send_from_directory, current_app, render_template
 from werkzeug.utils import secure_filename
-import os
+from datetime import datetime, timezone
 import zipfile
 
 app = Flask(__name__)
 
-log_folder_name = 'logs'
-with app.app_context():
-    upload_folder = os.path.join(current_app.root_path, log_folder_name)
 
-if not os.path.exists(upload_folder):
-    os.makedirs(upload_folder)
+def create_app(test_config=None):
+    # create and configure the app
+    app = Flask(__name__, instance_relative_config=True)
+    app.config.from_mapping(
+        SECRET_KEY='dev',
+        LOGFILEPATH=os.path.join(app.instance_path, 'logs'),
+    )
 
-app.config['UPLOAD_FOLDER'] = upload_folder
-app.config['MAX_CONTENT_PATH'] = 500000
-
-# TODO add authentication!!! LDAP?
-
-
-# TODO add file extension checking - only log files should be uploaded
-@app.route('/upload', methods=['GET', 'POST'])
-def upload():
-    if request.method == 'POST':
-        for file in request.files.getlist(''):
-            file.save(os.path.join(upload_folder, secure_filename(file.filename)))
-        return 'file uploaded successfully'
-    if request.method == 'GET':
-        return 'nothing here yet'
-
-
-@app.route('/logs', methods=['GET'])
-def list_logs():
-    files = os.listdir(upload_folder)
-    return render_template('directory_template.html', files=files)
-
-@app.route('/logs/<path:filename>', methods=['GET'])
-def download(filename):
-    if filename in os.listdir('./logs'):
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    if test_config is None:
+        # load the instance config, if it exists, when not testing
+        app.config.from_pyfile('config.py', silent=True)
     else:
-        return 'file not found'
+        # load the test config if passed in
+        app.config.from_mapping(test_config)
 
+    # Check for the instance folder and create
+    if not os.path.exists(app.instance_path):
+        os.makedirs(app.instance_path)
 
-@app.route('/pull_logs', methods=['GET'])
-def pull_logs():
-    with zipfile.ZipFile('logs.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(upload_folder):
-            for file in files:
-                zipf.write(os.path.join(upload_folder, file), file)
-    return send_from_directory(current_app.root_path, 'logs.zip', as_attachment=True)
+    # Check for the instance folder and create
+    if not os.path.exists(app.config['LOGFILEPATH']):
+        os.makedirs(app.config['LOGFILEPATH'])
 
+    @app.route('/uploadlog', methods=['POST'])
+    def upload():
+        if request.method == 'POST':
+            file = request.files['']
+            file_name, file_ext = file.filename.split('.')
+            file_string = f'{file_name}_{datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")}.{file_ext}'
+            file.save(os.path.join(app.config['LOGFILEPATH'], secure_filename(file_string)))
+            return 'file uploaded successfully'
+
+    @app.route('/logs', methods=['GET'])
+    def list_logs():
+        files = os.listdir(app.config['LOGFILEPATH'])
+        return render_template('directory_template.html', files=files)
+
+    @app.route('/logs/<path:filename>', methods=['GET'])
+    def download(filename):
+        if filename in os.listdir(app.config['LOGFILEPATH']):
+            return send_from_directory(app.config['LOGFILEPATH'], filename, as_attachment=True)
+        else:
+            return 'file not found'
+
+    @app.route('/pull_logs', methods=['GET'])
+    def pull_logs():
+        with zipfile.ZipFile('logs.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(app.config['LOGFILEPATH']):
+                for file in files:
+                    zipf.write(os.path.join(app.config['LOGFILEPATH'], file), file)
+        return send_from_directory(current_app.root_path, 'logs.zip', as_attachment=True)
+
+    return app
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    create_app().run(host='0.0.0.0', debug=True)
+
